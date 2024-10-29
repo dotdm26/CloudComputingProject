@@ -1,0 +1,166 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .weather-data {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        
+        <div class="search-form">
+            <input type="text" id="location" placeholder="Enter location (e.g., London, UK)">
+            <button onclick="getWeather()">Get Weather</button>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="weatherData" class="weather-data">
+            <h2 id="locationTitle"></h2>
+            <div id="currentWeather"></div>
+            
+            <h3>Hourly Forecast</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Temperature</th>
+                        <th>Humidity</th>
+                        <th>Wind Speed</th>
+                    </tr>
+                </thead>
+                <tbody id="hourlyForecast"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const location = document.getElementById('location').value;
+            const weatherData = document.getElementById('weatherData');
+            const error = document.getElementById('error');
+            
+            try {
+                const response = await fetch('/weather', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ location })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    error.style.display = 'none';
+                    weatherData.style.display = 'block';
+                    
+                    // Update location title
+                    document.getElementById('locationTitle').textContent = `Current Weather for ${data.location}`;
+                    
+                    // Update current weather
+                    const current = data.data.current;
+                    document.getElementById('currentWeather').innerHTML = `
+                        <p>Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
+                        <p>Wind Speed: ${current.wind_speed_10m} ${data.data.current_units.wind_speed_10m}</p>
+                    `;
+                    
+                    // Update hourly forecast
+                    const tbody = document.getElementById('hourlyForecast');
+                    tbody.innerHTML = '';
+                    
+                    for (let i = 0; i < 24; i++) {
+                        const time = data.data.hourly.time[i].split('T')[1];
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${time}</td>
+                            <td>${data.data.hourly.temperature_2m[i]}°${data.data.hourly_units.temperature_2m}</td>
+                            <td>${data.data.hourly.relative_humidity_2m[i]}${data.data.hourly_units.relative_humidity_2m}</td>
+                            <td>${data.data.hourly.wind_speed_10m[i]} ${data.data.hourly_units.wind_speed_10m}</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                } else {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                    weatherData.style.display = 'none';
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred. Please try again.';
+                error.style.display = 'block';
+                weatherData.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
