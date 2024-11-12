@@ -1,14 +1,14 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Forecast</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -57,20 +57,33 @@
             display: none;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .chart-container {
             margin-top: 20px;
         }
 
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .line {
+            fill: none;
+            stroke-width: 2;
         }
 
-        th {
-            background-color: #f8f9fa;
+        .axis-label {
+            font-size: 12px;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .grid line {
+            stroke: #e0e0e0;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
         }
     </style>
 </head>
@@ -89,22 +102,162 @@
             <h2 id="locationTitle"></h2>
             <div id="currentWeather"></div>
             
-            <h3>Hourly Forecast</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Temperature</th>
-                        <th>Humidity</th>
-                        <th>Wind Speed</th>
-                    </tr>
-                </thead>
-                <tbody id="hourlyForecast"></tbody>
-            </table>
+            <h3>Temperature Forecast</h3>
+            <div id="temperatureChart" class="chart-container"></div>
+            
+            <h3>Humidity Forecast</h3>
+            <div id="humidityChart" class="chart-container"></div>
+
+            <h3>Wind Forecast</h3>
+            <div id="windChart" class="chart-container"></div>
         </div>
     </div>
 
     <script>
+    class WeatherChart {
+        constructor(containerId, options = {}) {
+            this.containerId = containerId;
+            this.margin = options.margin || { top: 20, right: 30, bottom: 30, left: 40 };
+            this.width = (options.width || 1000) - this.margin.left - this.margin.right;
+            this.height = (options.height || 400) - this.margin.top - this.margin.bottom;
+            this.color = options.color || "#007bff";
+            this.yLabel = options.yLabel || "";
+            this.units = options.units || "";
+            this.tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+        }
+
+        init() {
+            d3.select(`#${this.containerId}`).select("svg").remove();
+
+            this.svg = d3.select(`#${this.containerId}`)
+                .append("svg")
+                .attr("width", this.width + this.margin.left + this.margin.right)
+                .attr("height", this.height + this.margin.top + this.margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+
+            return this;
+        }
+
+        update(data, xAccessor, yAccessor) {
+            const xScale = d3.scaleTime()
+                .domain(d3.extent(data, xAccessor))
+                .range([0, this.width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([d3.min(data, yAccessor) * 0.95, d3.max(data, yAccessor) * 1.05])
+                .range([this.height, 0]);
+
+            this.svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", `translate(0,${this.height})`)
+                .call(d3.axisBottom(xScale)
+                    .tickSize(-this.height)
+                    .tickFormat("")
+                );
+
+            this.svg.append("g")
+                .attr("class", "grid")
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-this.width)
+                    .tickFormat("")
+                );
+
+            this.svg.append("g")
+                .attr("transform", `translate(0,${this.height})`)
+                .call(d3.axisBottom(xScale));
+
+            this.svg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            this.svg.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - this.margin.left)
+                .attr("x", 0 - (this.height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text(this.yLabel);
+
+            const line = d3.line()
+                .x(d => xScale(xAccessor(d)))
+                .y(d => yScale(yAccessor(d)));
+
+            this.svg.append("path")
+                .datum(data)
+                .attr("class", "line")
+                .attr("stroke", this.color)
+                .attr("d", line);
+
+            this.svg.selectAll(".dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(xAccessor(d)))
+                .attr("cy", d => yScale(yAccessor(d)))
+                .attr("r", 4)
+                .attr("fill", this.color)
+                .on("mouseover", (event, d) => {
+                    this.tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    this.tooltip.html(`${xAccessor(d).toLocaleTimeString()}<br/>${yAccessor(d)}${this.units}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    this.tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            const hoverLine = this.svg.append("line")
+                .attr("class", "hover-line")
+                .style("stroke", "#999")
+                .style("stroke-dasharray", "3,3")
+                .style("opacity", 0);
+
+            const overlay = this.svg.append("rect")
+                .attr("class", "overlay")
+                .attr("width", this.width)
+                .attr("height", this.height)
+                .style("fill", "none")
+                .style("pointer-events", "all");
+
+            overlay.on("mousemove", (event) => {
+                const mouseX = d3.pointer(event)[0];
+                
+                const bisectDate = d3.bisector(xAccessor).left;
+                const x0 = xScale.invert(mouseX);
+                const i = bisectDate(data, x0, 1);
+                const d0 = data[i - 1];
+                const d1 = data[i];
+                const d = x0 - xAccessor(d0) > xAccessor(d1) - x0 ? d1 : d0;
+                
+                hoverLine
+                    .attr("x1", xScale(xAccessor(d)))
+                    .attr("x2", xScale(xAccessor(d)))
+                    .attr("y1", 0)
+                    .attr("y2", this.height)
+                    .style("opacity", 1);
+
+                this.tooltip
+                    .style("opacity", 0.9)
+                    .html(`${xAccessor(d).toLocaleTimeString()}<br/>${yAccessor(d)}${this.units}`)
+                    .style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY - 28}px`);
+            });
+
+            overlay.on("mouseout", () => {
+                hoverLine.style("opacity", 0);
+                this.tooltip.style("opacity", 0);
+            });
+        }
+    }
+
         async function getWeather() {
             const location = document.getElementById('location').value;
             const weatherData = document.getElementById('weatherData');
@@ -125,31 +278,56 @@
                     error.style.display = 'none';
                     weatherData.style.display = 'block';
                     
-                    // Update location title
-                    document.getElementById('locationTitle').textContent = `Current Weather for ${data.location}`;
+                    document.getElementById('locationTitle').textContent = `Weather Forecast for ${data.location}`;
                     
-                    // Update current weather
                     const current = data.data.current;
                     document.getElementById('currentWeather').innerHTML = `
-                        <p>Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
+                        <p>Current Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
                         <p>Wind Speed: ${current.wind_speed_10m} ${data.data.current_units.wind_speed_10m}</p>
                     `;
-                    
-                    // Update hourly forecast
-                    const tbody = document.getElementById('hourlyForecast');
-                    tbody.innerHTML = '';
-                    
-                    for (let i = 0; i < 24; i++) {
-                        const time = data.data.hourly.time[i].split('T')[1];
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${time}</td>
-                            <td>${data.data.hourly.temperature_2m[i]}°${data.data.hourly_units.temperature_2m}</td>
-                            <td>${data.data.hourly.relative_humidity_2m[i]}${data.data.hourly_units.relative_humidity_2m}</td>
-                            <td>${data.data.hourly.wind_speed_10m[i]} ${data.data.hourly_units.wind_speed_10m}</td>
-                        `;
-                        tbody.appendChild(row);
-                    }
+
+                    console.log('data:', data.data);
+
+                    const chartData = data.data.hourly.time.map((time, index) => ({
+                        time: new Date(time),
+                        temperature: data.data.hourly.temperature_2m[index],
+                        humidity: data.data.hourly.relative_humidity_2m[index],
+                        windSpeed: data.data.hourly.wind_speed_10m[index],
+                    }));
+
+                    const temperatureChart = new WeatherChart('temperatureChart', {
+                        color: '#ff7043',
+                        yLabel: `Temperature (${data.data.hourly_units.temperature_2m})`,
+                        units: `${data.data.hourly_units.temperature_2m}`,
+                    });
+                    temperatureChart.init().update(
+                        chartData,
+                        d => d.time,
+                        d => d.temperature
+                    );
+
+                    const humidityChart = new WeatherChart('humidityChart', {
+                        color: '#42a5f5',
+                        yLabel: `Humidity (${data.data.hourly_units.relative_humidity_2m})`,
+                        units: data.data.hourly_units.relative_humidity_2m,
+                    });
+                    humidityChart.init().update(
+                        chartData,
+                        d => d.time,
+                        d => d.humidity
+                    );
+
+                    const windChart = new WeatherChart('windChart', {
+                        color: '#66bb6a',
+                        yLabel: `Wind Speed (${data.data.hourly_units.wind_speed_10m})`,
+                        units: `${data.data.hourly_units.wind_speed_10m}`,
+                    });
+                    windChart.init().update(
+                        chartData,
+                        d => d.time,
+                        d => d.windSpeed
+                    );
+
                 } else {
                     error.textContent = data.error;
                     error.style.display = 'block';
