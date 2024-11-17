@@ -98,6 +98,13 @@
 
         <div id="error" class="error"></div>
 
+        <div id="latestLocations" class="latest-locations-box">
+            <h3>Latest Searches</h3>
+            <ul id="latestLocationsList">
+                <!-- Latest searches will be dynamically inserted here -->
+            </ul>
+        </div>
+
         <div id="weatherData" class="weather-data">
             <h2 id="locationTitle"></h2>
             <div id="currentWeather"></div>
@@ -258,6 +265,36 @@
         }
     }
 
+        async function fetchLatestSearches() {
+            try {
+                const response = await fetch('/latest_results');
+                const data = await response.json();
+                
+                const latestLocationsList = document.getElementById('latestLocationsList');
+                latestLocationsList.innerHTML = '';  // Clear any existing list items
+                
+                if (data.locations && data.locations.length > 0) {
+                    data.locations.forEach(location => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = location;
+                        latestLocationsList.appendChild(listItem);
+                    });
+                } else {
+                    const noResults = document.createElement('li');
+                    noResults.textContent = 'No recent searches.';
+                    latestLocationsList.appendChild(noResults);
+                }
+            } catch (err) {
+                console.error('Error fetching latest searches:', err);
+            }
+        }
+
+        // Call the fetchLatestSearches function when the page loads
+        window.onload = function() {
+            fetchLatestSearches();
+        };
+
+        // Function to fetch weather data (for location input)
         async function getWeather() {
             const location = document.getElementById('location').value;
             const weatherData = document.getElementById('weatherData');
@@ -281,7 +318,7 @@
                     document.getElementById('locationTitle').textContent = `Weather Forecast for ${data.location}`;
                     
                     const current = data.data.current;
-                    document.getElementById('currentWeather').innerHTML = `
+                    document.getElementById('currentWeather').innerHTML = `  
                         <p>Current Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
                         <p>Wind Speed: ${current.wind_speed_10m} ${data.data.current_units.wind_speed_10m}</p>
                     `;

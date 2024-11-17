@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify
 from geopy.geocoders import Nominatim
 import requests
+import database
 
 app = Flask(__name__)
 
@@ -36,6 +37,8 @@ def get_weather():
             lat, lon = coordinates
             weather_data = get_weather_data(lat, lon)
             if weather_data:
+                #save the searched location to the database
+                database.save_location(location)
                 return jsonify({
                     'success': True,
                     'location': location,
@@ -44,6 +47,10 @@ def get_weather():
             return jsonify({'success': False, 'error': 'Could not fetch weather data'})
         return jsonify({'success': False, 'error': 'Location not found'})
     return jsonify({'success': False, 'error': 'Please enter a location'})
+
+@app.route('/latest_results', methods=['GET'])
+def get_latest_results():
+    return database.show_latest_searches()
 
 if __name__ == '__main__':
     app.run(debug=True)
