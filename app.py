@@ -49,8 +49,12 @@ def get_weather():
     return jsonify({'success': False, 'error': 'Please enter a location'})
 
 @app.route('/latest_results', methods=['GET'])
-def get_latest_results():
+def get_latest_searches():
     return database.show_latest_searches()
+
+@app.route('/most_searches', methods=['GET'])
+def get_most_searches():
+    return database.show_most_searches()
 
 if __name__ == '__main__':
     app.run(debug=True)

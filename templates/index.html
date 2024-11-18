@@ -101,7 +101,12 @@
         <div id="latestLocations" class="latest-locations-box">
             <h3>Latest Searches</h3>
             <ul id="latestLocationsList">
-                <!-- Latest searches will be dynamically inserted here -->
+            </ul>
+        </div>
+
+        <div id="mostSearches" class="most-searches-box">
+            <h3>Most Popular Searches</h3>
+            <ul id="mostSearchesList">
             </ul>
         </div>
 
@@ -289,9 +294,34 @@
             }
         }
 
+        async function fetchMostSearches() {
+            try {
+                const response = await fetch('/most_searches');
+                const data = await response.json();
+                
+                const mostSearchesList = document.getElementById('mostSearchesList');
+                mostSearchesList.innerHTML = '';  // Clear any existing list items
+                
+                if (data.locations && data.locations.length > 0) {
+                    data.locations.forEach(location => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = location;
+                        mostSearchesList.appendChild(listItem);
+                    });
+                } else {
+                    const noResults = document.createElement('li');
+                    noResults.textContent = 'No result.';
+                    mostSearchesList.appendChild(noResults);
+                }
+            } catch (err) {
+                console.error('Error fetching most searches:', err);
+            }
+        }
+
         // Call the fetchLatestSearches function when the page loads
         window.onload = function() {
             fetchLatestSearches();
+            fetchMostSearches();
         };
 
         // Function to fetch weather data (for location input)

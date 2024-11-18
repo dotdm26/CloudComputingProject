@@ -24,14 +24,22 @@ def save_location(location):
     if result:
         print("Found")
         locations.update_one({"location": location},
-                             {"$set": {"timestamp": datetime.now()}})
+                             {"$set": {"timestamp": datetime.now()},
+                              "$inc": {"searches": 1}})
     else:
         print("Creating new")
         locations.insert_one({"location": location,
+                              "searches": 1,
                               "timestamp": datetime.now()})
 
 def show_latest_searches():
     results = list(locations.find().sort("timestamp", -1).limit(5))
+    location_name = [result['location'] for result in results]
+
+    return jsonify({"locations": location_name})
+
+def show_most_searches():
+    results = list(locations.find().sort("searches", -1).limit(5))
     location_name = [result['location'] for result in results]
 
     return jsonify({"locations": location_name})
