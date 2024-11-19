@@ -30,7 +30,7 @@ def index():
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
-    location = request.json.get('location')
+    location = request.json.get('location').capitalize()
     if location:
         coordinates = get_coordinates(location)
         if coordinates:

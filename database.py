@@ -23,20 +23,19 @@ search_history = db['search_history']
 #TODO: Ensure city name in the database is saved with the first letter capitalized
 def find_location(location, lat, lon):
     #find by lat & long
-    result = locations.find_one({"location": location, 
-                                 "longitude": lon,
+    result = locations.find_one({"longitude": lon,
                                  "latitude": lat})
     if result:
         print("Found location in database")
-        locations.update_one({"location": location},
+        locations.update_one({"location": location.capitalize()},
                              {"$inc": {"searches": 1}})
     else:
         print("Adding new location to database")
-        locations.insert_one({"location": location,
+        locations.insert_one({"location": location.capitalize(),
                               "longitude": lon,
                               "latitude": lat,
                               "searches": 1})
-    add_to_history(location)
+    add_to_history(location.capitalize())
         
 #add to search_history collection for tracking recent searches.
 def add_to_history(location):
