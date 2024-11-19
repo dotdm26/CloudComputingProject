@@ -37,8 +37,8 @@ def get_weather():
             lat, lon = coordinates
             weather_data = get_weather_data(lat, lon)
             if weather_data:
-                #save the searched location to the database
-                database.save_location(location)
+                #locate the searched location in the database
+                database.find_location(location, lat, lon)
                 return jsonify({
                     'success': True,
                     'location': location,

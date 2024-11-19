@@ -274,6 +274,8 @@
             try {
                 const response = await fetch('/latest_results');
                 const data = await response.json();
+                console.log(data);
+                console.log("adasoidhaiodhaoidh");
                 
                 const latestLocationsList = document.getElementById('latestLocationsList');
                 latestLocationsList.innerHTML = '';  // Clear any existing list items

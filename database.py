@@ -16,27 +16,38 @@ db = mongodb_client.cx.get_database('data')
 
 # Access collection named "locations" of the "data" database
 locations = db['locations']
+search_history = db['search_history']
 
 #check if city has been searched first, then update time.
 #if not, add city to database
-def save_location(location):
-    result = locations.find_one({"location": location})
+#TODO: Ensure city name in the database is saved with the first letter capitalized
+def find_location(location, lat, lon):
+    #find by lat & long
+    result = locations.find_one({"location": location, 
+                                 "longitude": lon,
+                                 "latitude": lat})
     if result:
-        print("Found")
+        print("Found location in database")
         locations.update_one({"location": location},
-                             {"$set": {"timestamp": datetime.now()},
-                              "$inc": {"searches": 1}})
+                             {"$inc": {"searches": 1}})
     else:
-        print("Creating new")
+        print("Adding new location to database")
         locations.insert_one({"location": location,
-                              "searches": 1,
-                              "timestamp": datetime.now()})
+                              "longitude": lon,
+                              "latitude": lat,
+                              "searches": 1})
+    add_to_history(location)
+        
+#add to search_history collection for tracking recent searches.
+def add_to_history(location):
+    search_history.insert_one({"location": location,
+                               "timestamp": datetime.now()})
 
 def show_latest_searches():
-    results = list(locations.find().sort("timestamp", -1).limit(5))
-    location_name = [result['location'] for result in results]
+    results = list(search_history.find().sort("timestamp", -1).limit(5))
+    search_result = [result['location'] for result in results]
 
-    return jsonify({"locations": location_name})
+    return jsonify({"locations": search_result})
 
 def show_most_searches():
     results = list(locations.find().sort("searches", -1).limit(5))
