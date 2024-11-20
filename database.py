@@ -21,17 +21,16 @@ search_history = db['search_history']
 #check if city has been searched first, then update time.
 #if not, add city to database
 #TODO: Ensure city name in the database is saved with the first letter capitalized
-def find_location(location, lat, lon):
+def find_location(location, address, lat, lon):
     #find by lat & long
-    result = locations.find_one({"longitude": lon,
-                                 "latitude": lat})
+    result = locations.find_one({"address": address})
     if result:
         print("Found location in database")
-        locations.update_one({"location": location.capitalize()},
+        locations.update_one({"address": address},
                              {"$inc": {"searches": 1}})
     else:
         print("Adding new location to database")
-        locations.insert_one({"location": location.capitalize(),
+        locations.insert_one({"address": address,
                               "longitude": lon,
                               "latitude": lat,
                               "searches": 1})
@@ -50,6 +49,6 @@ def show_latest_searches():
 
 def show_most_searches():
     results = list(locations.find().sort("searches", -1).limit(5))
-    location_name = [result['location'] for result in results]
+    address_name = [result['address'] for result in results]
 
-    return jsonify({"locations": location_name})
+    return jsonify({"addresses": address_name})
