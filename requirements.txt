@@ -1,3 +1,5 @@
 Flask
 geopy
 requests
+python-dotenv
+flask_pymongo

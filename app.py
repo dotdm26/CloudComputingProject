@@ -11,7 +11,7 @@ def get_coordinates(location):
     try:
         location_data = geolocator.geocode(location)
         if location_data:
-            return location_data.latitude, location_data.longitude
+            return location_data.latitude, location_data.longitude, location_data.address
         return None
     except:
         return None
