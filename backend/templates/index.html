@@ -112,6 +112,7 @@
 
         <div id="weatherData" class="weather-data">
             <h2 id="locationTitle"></h2>
+            <div id="locationAddress"></div>
             <div id="currentWeather"></div>
             
             <h3>Temperature Forecast</h3>
@@ -304,10 +305,10 @@
                 const mostSearchesList = document.getElementById('mostSearchesList');
                 mostSearchesList.innerHTML = '';  // Clear any existing list items
                 
-                if (data.locations && data.locations.length > 0) {
-                    data.locations.forEach(location => {
+                if (data.addresses && data.addresses.length > 0) {
+                    data.addresses.forEach(address => {
                         const listItem = document.createElement('li');
-                        listItem.textContent = location;
+                        listItem.textContent = address;
                         mostSearchesList.appendChild(listItem);
                     });
                 } else {
@@ -348,6 +349,7 @@
                     weatherData.style.display = 'block';
                     
                     document.getElementById('locationTitle').textContent = `Weather Forecast for ${data.location}`;
+                    document.getElementById('locationAddress').textContent = `Address: ${data.address}`;
                     
                     const current = data.data.current;
                     document.getElementById('currentWeather').innerHTML = `  

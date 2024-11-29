@@ -36,14 +36,15 @@ def get_weather():
     if location:
         coordinates = get_coordinates(location)
         if coordinates:
-            lat, lon = coordinates
+            lat, lon, address = coordinates
             weather_data = get_weather_data(lat, lon)
             if weather_data:
                 #locate the searched location in the database
-                database.find_location(location, lat, lon)
+                database.find_location(location, address, lat, lon)
                 return jsonify({
                     'success': True,
                     'location': location,
+                    'address': address, #Location name is assigned to the actual address
                     'data': weather_data
                 })
             return jsonify({'success': False, 'error': 'Could not fetch weather data'})
