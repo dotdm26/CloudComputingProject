@@ -1,10 +1,12 @@
 # app.py
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from geopy.geocoders import Nominatim
 import requests
-import database
+import database as database
 
 app = Flask(__name__)
+CORS(app)
 
 def get_coordinates(location):
     geolocator = Nominatim(user_agent="weather_app")
