@@ -1,28 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Forecast</title>
+    <link href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" rel="stylesheet"/>
+    <!-- <link href="static/styles.css" rel="stylesheet"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
             background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
         }
 
-        .container {
-            background-color: white;
+        .grid-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-areas:
+                "search search search"
+                "content content sidebar"
+                "charts charts sidebar";
+            grid-template-columns: 1fr 1fr 300px;
+            gap: 20px;
             padding: 20px;
+        }
+
+        .search-box {
+            grid-area: search;
+            background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
         .search-form {
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 0;
         }
 
         input[type="text"] {
@@ -46,9 +63,88 @@
             background-color: #0056b3;
         }
 
-        .weather-data {
+        .content-area {
+            grid-area: content;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .text-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 200px;
+        }
+
+        #initialMessage {
+            text-align: center;
+            color: #666;
+            margin-top: 60px;
+        }
+
+
+        .map-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #osm-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .charts {
+            grid-area: charts;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-section {
             margin-top: 20px;
-            display: none;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .chart-container {
+            height: 300px;
+            width: 100%;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .latest-locations-box,
+        .most-searches-box {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .latest-locations-box ul,
+        .most-searches-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .latest-locations-box li,
+        .most-searches-box li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
         }
 
         .error {
@@ -57,10 +153,7 @@
             display: none;
         }
 
-        .chart-container {
-            margin-top: 20px;
-        }
-
+        /* D3 Chart Styles */
         .line {
             fill: none;
             stroke-width: 2;
@@ -85,54 +178,139 @@
             stroke-opacity: 0.7;
             shape-rendering: crispEdges;
         }
+
+        /* Weather Info Styles */
+        .weather-info {
+            margin-top: 20px;
+        }
+
+        #locationTitle {
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+
+        #locationAddress {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        #currentWeather {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        #currentWeather p {
+            margin: 5px 0;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1200px) {
+            .grid-container {
+                grid-template-areas:
+                    "search search"
+                    "content sidebar"
+                    "charts sidebar";
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-areas:
+                    "search"
+                    "content"
+                    "sidebar"
+                    "charts";
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                grid-template-columns: 1fr;
+            }
+
+            .search-form {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            input[type="text"] {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Weather Forecast</h1>
-        
-        <div class="search-form">
-            <input type="text" id="location" placeholder="Enter location (e.g., London, UK)">
-            <button onclick="getWeather()">Get Weather</button>
+    <div class="grid-container">
+        <div class="search-box">
+            <h2>Weather Forecast</h2>
+            <div class="search-form">
+                <input type="text" id="location" placeholder="Enter location (e.g., London, UK)">
+                <button onclick="getWeather()">Get Weather</button>
+            </div>
+            <div id="error" class="error"></div>
         </div>
-
-        <div id="error" class="error"></div>
-
-        <div id="latestLocations" class="latest-locations-box">
-            <h3>Latest Searches</h3>
-            <ul id="latestLocationsList">
-            </ul>
-        </div>
-
-        <div id="mostSearches" class="most-searches-box">
-            <h3>Most Popular Searches</h3>
-            <ul id="mostSearchesList">
-            </ul>
-        </div>
-
-        <div id="weatherData" class="weather-data">
-            <h2 id="locationTitle"></h2>
-            <div id="locationAddress"></div>
-            <div id="currentWeather"></div>
+    
+        <div class="content-area">
+            <div class="text-content">
+                <div id="weatherData" style="display: none;">
+                    <h2 id="locationTitle"></h2>
+                    <div id="locationAddress"></div>
+                    <div id="currentWeather"></div>
+                </div>
+                <div id="initialMessage">
+                    Enter a location above to see weather details
+                </div>
+            </div>
             
-            <h3>Temperature Forecast</h3>
-            <div id="temperatureChart" class="chart-container"></div>
+            <div class="map-container">
+                <div id="osm-map"></div>
+            </div>
+        </div>
+    
+        <div class="sidebar">
+            <div class="latest-locations-box">
+                <h3>Latest Searches</h3>
+                <div id="latestLocationsList"></div>
+            </div>
             
-            <h3>Humidity Forecast</h3>
-            <div id="humidityChart" class="chart-container"></div>
-
-            <h3>Wind Forecast</h3>
-            <div id="windChart" class="chart-container"></div>
+            <div class="most-searches-box">
+                <h3>Most Popular Searches</h3>
+                <div id="mostSearchesList"></div>
+            </div>
+        </div>
+    
+        <div class="charts">
+            <div class="chart-section">
+                <h3>Temperature Forecast</h3>
+                <div id="temperatureChart" class="chart-container"></div>
+            </div>
+            
+            <div class="chart-section">
+                <h3>Humidity Forecast</h3>
+                <div id="humidityChart" class="chart-container"></div>
+            </div>
+            
+            <div class="chart-section">
+                <h3>Wind Forecast</h3>
+                <div id="windChart" class="chart-container"></div>
+            </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
     <script>
     class WeatherChart {
         constructor(containerId, options = {}) {
             this.containerId = containerId;
             this.margin = options.margin || { top: 20, right: 30, bottom: 30, left: 40 };
-            this.width = (options.width || 1000) - this.margin.left - this.margin.right;
-            this.height = (options.height || 400) - this.margin.top - this.margin.bottom;
+            const container = document.getElementById(containerId);
+            const containerWidth = container.offsetWidth;
+            this.width = containerWidth - this.margin.left - this.margin.right;
+            this.height = (options.height || 300) - this.margin.top - this.margin.bottom;
             this.color = options.color || "#007bff";
             this.yLabel = options.yLabel || "";
             this.units = options.units || "";
@@ -144,10 +322,13 @@
         init() {
             d3.select(`#${this.containerId}`).select("svg").remove();
 
+            // Make SVG responsive
             this.svg = d3.select(`#${this.containerId}`)
                 .append("svg")
-                .attr("width", this.width + this.margin.left + this.margin.right)
-                .attr("height", this.height + this.margin.top + this.margin.bottom)
+                .attr("viewBox", `0 0 ${this.width + this.margin.left + this.margin.right} ${this.height + this.margin.top + this.margin.bottom}`)
+                .attr("preserveAspectRatio", "xMidYMid meet")
+                .style("width", "100%")
+                .style("height", "100%")
                 .append("g")
                 .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
@@ -325,7 +506,34 @@
         window.onload = function() {
             fetchLatestSearches();
             fetchMostSearches();
+            initMap();
         };
+
+        let map;
+        let currentMarker;
+
+        function initMap() {
+            const element = document.getElementById('osm-map');
+            map = L.map(element);
+            
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            map.setView([0, 0], 2);
+        }
+
+        function updateMap(lat, lon) {
+            const target = L.latLng(lat, lon);
+            
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            currentMarker = L.marker(target).addTo(map);
+            
+            map.setView(target, 14);
+        }
 
         // Function to fetch weather data (for location input)
         async function getWeather() {
@@ -345,6 +553,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    updateMap(data.data.latitude, data.data.longitude);
+
                     error.style.display = 'none';
                     weatherData.style.display = 'block';
                     

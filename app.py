@@ -45,7 +45,11 @@ def get_weather():
                     'success': True,
                     'location': location,
                     'address': address, #Location name is assigned to the actual address
-                    'data': weather_data
+                    'data': {
+                        **weather_data,
+                        'latitude': lat,
+                        'longitude': lon
+                    }
                 })
             return jsonify({'success': False, 'error': 'Could not fetch weather data'})
         return jsonify({'success': False, 'error': 'Location not found'})
