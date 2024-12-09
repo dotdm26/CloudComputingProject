@@ -10,7 +10,6 @@ from datetime import datetime
 load_dotenv()
 
 # Setup MongoDB. Keys are stored locally in an .env file to avoid unwanted access
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 
 mongodb_client = PyMongo(app)

@@ -1,7 +1,7 @@
 Setup:
 
 * `python -m pip install -r requirements.txt`
-* Create a .env file with `SECRET_KEY` and `MONGO_URI` for your MongoDB Database
+* Create a .env file with `MONGO_URI` for your MongoDB Database
 
 To run:
 
