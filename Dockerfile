@@ -8,7 +8,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy the application code
-COPY app.py ./
+COPY index.html ./
 
 # Expose a port 
 EXPOSE 8080
