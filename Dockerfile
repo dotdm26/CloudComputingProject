@@ -1,14 +1,17 @@
-# [START dockerfile]
-FROM golang:1.23.2 as builder
-WORKDIR /app
-RUN go mod init app
-COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /hello-app
+# Use a lightweight Python image as the base
+FROM python:3.11-slim-buster
 
-FROM gcr.io/distroless/base-debian11
-WORKDIR /
-COPY --from=builder /hello-app /hello-app
-ENV PORT 8080
-USER nonroot:nonroot
-CMD ["/hello-app"]
-# [END dockerfile]
+# Set the working directory in the container
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy the application code
+COPY app.py ./
+
+# Expose a port 
+EXPOSE 8080
+
+# Command to run when the container starts
+CMD ["python", "app.py"] 
