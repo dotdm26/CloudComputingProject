@@ -1,47 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Forecast</title>
-    <link href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" rel="stylesheet"/>
-    <!-- <link href="static/styles.css" rel="stylesheet"> -->
+    <!-- Include the D3.js library for creating charts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
+        /* Basic styling for body */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .grid-container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            display: grid;
-            grid-template-areas:
-                "search search search"
-                "content content sidebar"
-                "charts charts sidebar";
-            grid-template-columns: 1fr 1fr 300px;
-            gap: 20px;
             padding: 20px;
+            background-color: #f5f5f5;
         }
 
-        .search-box {
-            grid-area: search;
-            background: white;
+        /* Styling for the main container */
+        .container {
+            background-color: white;
+            padding: 20px;
             border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Styling for the search form */
         .search-form {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 0;
+            margin-bottom: 20px;
         }
 
+        /* Input field styling */
         input[type="text"] {
             padding: 8px;
             width: 300px;
@@ -50,6 +38,7 @@
             border-radius: 4px;
         }
 
+        /* Button styling */
         button {
             padding: 8px 16px;
             background-color: #007bff;
@@ -59,110 +48,41 @@
             cursor: pointer;
         }
 
+        /* Button hover effect */
         button:hover {
             background-color: #0056b3;
         }
 
-        .content-area {
-            grid-area: content;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .text-content {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-height: 200px;
-        }
-
-        #initialMessage {
-            text-align: center;
-            color: #666;
-            margin-top: 60px;
-        }
-
-
-        .map-container {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        #osm-map {
-            height: 400px;
-            width: 100%;
-            border-radius: 4px;
-        }
-
-        .sidebar {
-            grid-area: sidebar;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .charts {
-            grid-area: charts;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .chart-section {
+        /* Weather data section styling (hidden by default) */
+        .weather-data {
             margin-top: 20px;
-            width: 100%;
-            overflow: hidden;
+            display: none;
         }
 
-        .chart-container {
-            height: 300px;
-            width: 100%;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-
-        .latest-locations-box,
-        .most-searches-box {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .latest-locations-box ul,
-        .most-searches-box ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .latest-locations-box li,
-        .most-searches-box li {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
+        /* Styling for error messages */
         .error {
             color: red;
             margin-top: 10px;
             display: none;
         }
 
-        /* D3 Chart Styles */
+        /* Chart container styling */
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        /* Styling for the chart line */
         .line {
             fill: none;
             stroke-width: 2;
         }
 
+        /* Axis label styling */
         .axis-label {
             font-size: 12px;
         }
 
+        /* Tooltip styling */
         .tooltip {
             position: absolute;
             padding: 8px;
@@ -173,177 +93,103 @@
             pointer-events: none;
         }
 
+        /* Grid line styling */
         .grid line {
             stroke: #e0e0e0;
             stroke-opacity: 0.7;
             shape-rendering: crispEdges;
         }
-
-        /* Weather Info Styles */
-        .weather-info {
-            margin-top: 20px;
-        }
-
-        #locationTitle {
-            margin: 0 0 10px 0;
-            font-size: 1.5em;
-        }
-
-        #locationAddress {
-            color: #666;
-            margin-bottom: 15px;
-        }
-
-        #currentWeather {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-
-        #currentWeather p {
-            margin: 5px 0;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 1200px) {
-            .grid-container {
-                grid-template-areas:
-                    "search search"
-                    "content sidebar"
-                    "charts sidebar";
-                grid-template-columns: 1fr 300px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .grid-container {
-                grid-template-areas:
-                    "search"
-                    "content"
-                    "sidebar"
-                    "charts";
-                grid-template-columns: 1fr;
-            }
-
-            .content-area {
-                grid-template-columns: 1fr;
-            }
-
-            .search-form {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            input[type="text"] {
-                width: 100%;
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="grid-container">
-        <div class="search-box">
-            <h2>Weather Forecast</h2>
-            <div class="search-form">
-                <input type="text" id="location" placeholder="Enter location (e.g., London, UK)">
-                <button onclick="getWeather()">Get Weather</button>
-            </div>
-            <div id="error" class="error"></div>
+    <!-- Main container for the weather application -->
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        
+        <!-- Search form for entering location -->
+        <div class="search-form">
+            <input type="text" id="location" placeholder="Enter location (e.g., London, UK)">
+            <button onclick="getWeather()">Get Weather</button>
         </div>
-    
-        <div class="content-area">
-            <div class="text-content">
-                <div id="weatherData" style="display: none;">
-                    <h2 id="locationTitle"></h2>
-                    <div id="locationAddress"></div>
-                    <div id="currentWeather"></div>
-                </div>
-                <div id="initialMessage">
-                    Enter a location above to see weather details
-                </div>
-            </div>
-            
-            <div class="map-container">
-                <div id="osm-map"></div>
-            </div>
+
+        <!-- Container for displaying errors -->
+        <div id="error" class="error"></div>
+
+        <!-- Container for recent searches -->
+        <div id="latestLocations" class="latest-locations-box">
+            <h3>Latest Searches</h3>
+            <ul id="latestLocationsList">
+            </ul>
         </div>
-    
-        <div class="sidebar">
-            <div class="latest-locations-box">
-                <h3>Latest Searches</h3>
-                <div id="latestLocationsList"></div>
-            </div>
-            
-            <div class="most-searches-box">
-                <h3>Most Popular Searches</h3>
-                <div id="mostSearchesList"></div>
-            </div>
+
+        <!-- Container for most popular searches -->
+        <div id="mostSearches" class="most-searches-box">
+            <h3>Most Popular Searches</h3>
+            <ul id="mostSearchesList">
+            </ul>
         </div>
-    
-        <div class="charts">
-            <div class="chart-section">
-                <h3>Temperature Forecast</h3>
-                <div id="temperatureChart" class="chart-container"></div>
-            </div>
+
+        <!-- Weather data display section -->
+        <div id="weatherData" class="weather-data">
+            <h2 id="locationTitle"></h2>
+            <div id="locationAddress"></div>
+            <div id="currentWeather"></div>
             
-            <div class="chart-section">
-                <h3>Humidity Forecast</h3>
-                <div id="humidityChart" class="chart-container"></div>
-            </div>
+            <!-- Temperature forecast chart -->
+            <h3>Temperature Forecast</h3>
+            <div id="temperatureChart" class="chart-container"></div>
             
-            <div class="chart-section">
-                <h3>Wind Forecast</h3>
-                <div id="windChart" class="chart-container"></div>
-            </div>
+            <!-- Humidity forecast chart -->
+            <h3>Humidity Forecast</h3>
+            <div id="humidityChart" class="chart-container"></div>
+
+            <!-- Wind forecast chart -->
+            <h3>Wind Forecast</h3>
+            <div id="windChart" class="chart-container"></div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
     <script>
+    // Class for creating weather charts using D3.js
     class WeatherChart {
         constructor(containerId, options = {}) {
-            this.containerId = containerId;
-            this.margin = options.margin || { top: 20, right: 30, bottom: 30, left: 40 };
-            const container = document.getElementById(containerId);
-            const containerWidth = container.offsetWidth;
-            this.width = containerWidth - this.margin.left - this.margin.right;
-            this.height = (options.height || 300) - this.margin.top - this.margin.bottom;
-            this.color = options.color || "#007bff";
-            this.yLabel = options.yLabel || "";
-            this.units = options.units || "";
-            this.tooltip = d3.select("body").append("div")
+            this.containerId = containerId; // ID of the container to hold the chart
+            this.margin = options.margin || { top: 20, right: 30, bottom: 30, left: 40 }; // Chart margins
+            this.width = (options.width || 1000) - this.margin.left - this.margin.right; // Width of the chart
+            this.height = (options.height || 400) - this.margin.top - this.margin.bottom; // Height of the chart
+            this.color = options.color || "#007bff"; // Color of the chart line
+            this.yLabel = options.yLabel || ""; // Label for the y-axis
+            this.units = options.units || ""; // Units for the y-axis values
+            this.tooltip = d3.select("body").append("div") // Tooltip for showing data on hover
                 .attr("class", "tooltip")
                 .style("opacity", 0);
         }
 
+        // Initialize the chart by setting up the SVG element
         init() {
-            d3.select(`#${this.containerId}`).select("svg").remove();
+            d3.select(`#${this.containerId}`).select("svg").remove(); // Clear any existing chart
 
-            // Make SVG responsive
             this.svg = d3.select(`#${this.containerId}`)
                 .append("svg")
-                .attr("viewBox", `0 0 ${this.width + this.margin.left + this.margin.right} ${this.height + this.margin.top + this.margin.bottom}`)
-                .attr("preserveAspectRatio", "xMidYMid meet")
-                .style("width", "100%")
-                .style("height", "100%")
+                .attr("width", this.width + this.margin.left + this.margin.right)
+                .attr("height", this.height + this.margin.top + this.margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
             return this;
         }
 
+        // Update the chart with new data
         update(data, xAccessor, yAccessor) {
-            const xScale = d3.scaleTime()
-                .domain(d3.extent(data, xAccessor))
+            const xScale = d3.scaleTime() // Scale for the x-axis (time)
+                .domain(d3.extent(data, xAccessor)) // Domain based on data range
                 .range([0, this.width]);
 
-            const yScale = d3.scaleLinear()
-                .domain([d3.min(data, yAccessor) * 0.95, d3.max(data, yAccessor) * 1.05])
+            const yScale = d3.scaleLinear() // Scale for the y-axis (numeric values)
+                .domain([d3.min(data, yAccessor) * 0.95, d3.max(data, yAccessor) * 1.05]) // Adjusted domain
                 .range([this.height, 0]);
 
+            // Add gridlines for the x-axis
             this.svg.append("g")
                 .attr("class", "grid")
                 .attr("transform", `translate(0,${this.height})`)
@@ -352,6 +198,7 @@
                     .tickFormat("")
                 );
 
+            // Add gridlines for the y-axis
             this.svg.append("g")
                 .attr("class", "grid")
                 .call(d3.axisLeft(yScale)
@@ -359,13 +206,16 @@
                     .tickFormat("")
                 );
 
+            // Add the x-axis
             this.svg.append("g")
                 .attr("transform", `translate(0,${this.height})`)
                 .call(d3.axisBottom(xScale));
 
+            // Add the y-axis
             this.svg.append("g")
                 .call(d3.axisLeft(yScale));
 
+            // Add the y-axis label
             this.svg.append("text")
                 .attr("class", "axis-label")
                 .attr("transform", "rotate(-90)")
@@ -375,16 +225,18 @@
                 .style("text-anchor", "middle")
                 .text(this.yLabel);
 
+            // Create the line path for the data
             const line = d3.line()
-                .x(d => xScale(xAccessor(d)))
-                .y(d => yScale(yAccessor(d)));
+                .x(d => xScale(xAccessor(d))) // x-axis data
+                .y(d => yScale(yAccessor(d))); // y-axis data
 
             this.svg.append("path")
-                .datum(data)
+                .datum(data) // Bind data
                 .attr("class", "line")
                 .attr("stroke", this.color)
-                .attr("d", line);
+                .attr("d", line); // Draw the line
 
+            // Add data points as circles
             this.svg.selectAll(".dot")
                 .data(data)
                 .enter()
@@ -394,7 +246,7 @@
                 .attr("cy", d => yScale(yAccessor(d)))
                 .attr("r", 4)
                 .attr("fill", this.color)
-                .on("mouseover", (event, d) => {
+                .on("mouseover", (event, d) => { // Show tooltip on hover
                     this.tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
@@ -402,18 +254,20 @@
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 28) + "px");
                 })
-                .on("mouseout", () => {
+                .on("mouseout", () => { // Hide tooltip when not hovering
                     this.tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
                 });
 
+            // Add hover line for interaction
             const hoverLine = this.svg.append("line")
                 .attr("class", "hover-line")
                 .style("stroke", "#999")
                 .style("stroke-dasharray", "3,3")
                 .style("opacity", 0);
 
+            // Overlay for detecting mouse events
             const overlay = this.svg.append("rect")
                 .attr("class", "overlay")
                 .attr("width", this.width)
@@ -421,16 +275,17 @@
                 .style("fill", "none")
                 .style("pointer-events", "all");
 
-            overlay.on("mousemove", (event) => {
-                const mouseX = d3.pointer(event)[0];
+            overlay.on("mousemove", (event) => { // Handle mouse movement
+                const mouseX = d3.pointer(event)[0]; // Get x-coordinate of the mouse
                 
-                const bisectDate = d3.bisector(xAccessor).left;
-                const x0 = xScale.invert(mouseX);
+                const bisectDate = d3.bisector(xAccessor).left; // Bisect to find the closest data point
+                const x0 = xScale.invert(mouseX); // Convert pixel to data value
                 const i = bisectDate(data, x0, 1);
                 const d0 = data[i - 1];
                 const d1 = data[i];
-                const d = x0 - xAccessor(d0) > xAccessor(d1) - x0 ? d1 : d0;
+                const d = x0 - xAccessor(d0) > xAccessor(d1) - x0 ? d1 : d0; // Choose the closest point
                 
+                // Update hover line position
                 hoverLine
                     .attr("x1", xScale(xAccessor(d)))
                     .attr("x2", xScale(xAccessor(d)))
@@ -438,6 +293,7 @@
                     .attr("y2", this.height)
                     .style("opacity", 1);
 
+                // Show tooltip with data
                 this.tooltip
                     .style("opacity", 0.9)
                     .html(`${xAccessor(d).toLocaleTimeString()}<br/>${yAccessor(d)}${this.units}`)
@@ -445,181 +301,154 @@
                     .style("top", `${event.pageY - 28}px`);
             });
 
-            overlay.on("mouseout", () => {
+            overlay.on("mouseout", () => { // Hide hover line and tooltip on mouse out
                 hoverLine.style("opacity", 0);
                 this.tooltip.style("opacity", 0);
             });
         }
     }
 
-        async function fetchLatestSearches() {
-            try {
-                const response = await fetch('/latest_results');
-                const data = await response.json();
-                console.log(data);
-                console.log("adasoidhaiodhaoidh");
-                
-                const latestLocationsList = document.getElementById('latestLocationsList');
-                latestLocationsList.innerHTML = '';  // Clear any existing list items
-                
-                if (data.locations && data.locations.length > 0) {
-                    data.locations.forEach(location => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = location;
-                        latestLocationsList.appendChild(listItem);
-                    });
-                } else {
-                    const noResults = document.createElement('li');
-                    noResults.textContent = 'No recent searches.';
-                    latestLocationsList.appendChild(noResults);
-                }
-            } catch (err) {
-                console.error('Error fetching latest searches:', err);
-            }
-        }
-
-        async function fetchMostSearches() {
-            try {
-                const response = await fetch('/most_searches');
-                const data = await response.json();
-                
-                const mostSearchesList = document.getElementById('mostSearchesList');
-                mostSearchesList.innerHTML = '';  // Clear any existing list items
-                
-                if (data.addresses && data.addresses.length > 0) {
-                    data.addresses.forEach(address => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = address;
-                        mostSearchesList.appendChild(listItem);
-                    });
-                } else {
-                    const noResults = document.createElement('li');
-                    noResults.textContent = 'No result.';
-                    mostSearchesList.appendChild(noResults);
-                }
-            } catch (err) {
-                console.error('Error fetching most searches:', err);
-            }
-        }
-
-        // Call the fetchLatestSearches function when the page loads
-        window.onload = function() {
-            fetchLatestSearches();
-            fetchMostSearches();
-            initMap();
-        };
-
-        let map;
-        let currentMarker;
-
-        function initMap() {
-            const element = document.getElementById('osm-map');
-            map = L.map(element);
+    // Fetch recent searches and update the list
+    async function fetchLatestSearches() {
+        try {
+            const response = await fetch('/latest_results');
+            const data = await response.json(); // Parse response JSON
             
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            const latestLocationsList = document.getElementById('latestLocationsList');
+            latestLocationsList.innerHTML = ''; // Clear existing content
             
-            map.setView([0, 0], 2);
-        }
-
-        function updateMap(lat, lon) {
-            const target = L.latLng(lat, lon);
-            
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            
-            currentMarker = L.marker(target).addTo(map);
-            
-            map.setView(target, 14);
-        }
-
-        // Function to fetch weather data (for location input)
-        async function getWeather() {
-            const location = document.getElementById('location').value;
-            const weatherData = document.getElementById('weatherData');
-            const error = document.getElementById('error');
-            
-            try {
-                const response = await fetch('/weather', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ location })
+            if (data.locations && data.locations.length > 0) { // Check if locations exist
+                data.locations.forEach(location => {
+                    const listItem = document.createElement('li'); // Create list item for each location
+                    listItem.textContent = location;
+                    latestLocationsList.appendChild(listItem);
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    updateMap(data.data.latitude, data.data.longitude);
-
-                    error.style.display = 'none';
-                    weatherData.style.display = 'block';
-                    
-                    document.getElementById('locationTitle').textContent = `Weather Forecast for ${data.location}`;
-                    document.getElementById('locationAddress').textContent = `Address: ${data.address}`;
-                    
-                    const current = data.data.current;
-                    document.getElementById('currentWeather').innerHTML = `  
-                        <p>Current Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
-                        <p>Wind Speed: ${current.wind_speed_10m} ${data.data.current_units.wind_speed_10m}</p>
-                    `;
-
-                    console.log('data:', data.data);
-
-                    const chartData = data.data.hourly.time.map((time, index) => ({
-                        time: new Date(time),
-                        temperature: data.data.hourly.temperature_2m[index],
-                        humidity: data.data.hourly.relative_humidity_2m[index],
-                        windSpeed: data.data.hourly.wind_speed_10m[index],
-                    }));
-
-                    const temperatureChart = new WeatherChart('temperatureChart', {
-                        color: '#ff7043',
-                        yLabel: `Temperature (${data.data.hourly_units.temperature_2m})`,
-                        units: `${data.data.hourly_units.temperature_2m}`,
-                    });
-                    temperatureChart.init().update(
-                        chartData,
-                        d => d.time,
-                        d => d.temperature
-                    );
-
-                    const humidityChart = new WeatherChart('humidityChart', {
-                        color: '#42a5f5',
-                        yLabel: `Humidity (${data.data.hourly_units.relative_humidity_2m})`,
-                        units: data.data.hourly_units.relative_humidity_2m,
-                    });
-                    humidityChart.init().update(
-                        chartData,
-                        d => d.time,
-                        d => d.humidity
-                    );
-
-                    const windChart = new WeatherChart('windChart', {
-                        color: '#66bb6a',
-                        yLabel: `Wind Speed (${data.data.hourly_units.wind_speed_10m})`,
-                        units: `${data.data.hourly_units.wind_speed_10m}`,
-                    });
-                    windChart.init().update(
-                        chartData,
-                        d => d.time,
-                        d => d.windSpeed
-                    );
-
-                } else {
-                    error.textContent = data.error;
-                    error.style.display = 'block';
-                    weatherData.style.display = 'none';
-                }
-            } catch (err) {
-                error.textContent = 'An error occurred. Please try again.';
-                error.style.display = 'block';
-                weatherData.style.display = 'none';
+            } else {
+                const noResults = document.createElement('li'); // Handle empty result case
+                noResults.textContent = 'No recent searches.';
+                latestLocationsList.appendChild(noResults);
             }
+        } catch (err) {
+            console.error('Error fetching latest searches:', err); // Log errors
         }
+    }
+
+    // Fetch most popular searches and update the list
+    async function fetchMostSearches() {
+        try {
+            const response = await fetch('/most_searches');
+            const data = await response.json(); // Parse response JSON
+            
+            const mostSearchesList = document.getElementById('mostSearchesList');
+            mostSearchesList.innerHTML = ''; // Clear existing content
+            
+            if (data.addresses && data.addresses.length > 0) { // Check if addresses exist
+                data.addresses.forEach(address => {
+                    const listItem = document.createElement('li'); // Create list item for each address
+                    listItem.textContent = address;
+                    mostSearchesList.appendChild(listItem);
+                });
+            } else {
+                const noResults = document.createElement('li'); // Handle empty result case
+                noResults.textContent = 'No result.';
+                mostSearchesList.appendChild(noResults);
+            }
+        } catch (err) {
+            console.error('Error fetching most searches:', err); // Log errors
+        }
+    }
+
+    // Initialize the page with data when it loads
+    window.onload = function() {
+        fetchLatestSearches(); // Fetch recent searches
+        fetchMostSearches(); // Fetch most popular searches
+    };
+
+    // Fetch weather data for the given location
+    async function getWeather() {
+        const location = document.getElementById('location').value; // Get input value
+        const weatherData = document.getElementById('weatherData'); // Weather data container
+        const error = document.getElementById('error'); // Error message container
+        
+        try {
+            const response = await fetch('/weather', { // Send POST request to weather endpoint
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ location }) // Include location in request body
+            });
+            
+            const data = await response.json(); // Parse response JSON
+            
+            if (data.success) { // If request succeeded
+                error.style.display = 'none'; // Hide error
+                weatherData.style.display = 'block'; // Show weather data
+                
+                // Update weather details
+                document.getElementById('locationTitle').textContent = `Weather Forecast for ${data.location}`;
+                document.getElementById('locationAddress').textContent = `Address: ${data.address}`;
+                
+                const current = data.data.current; // Current weather data
+                document.getElementById('currentWeather').innerHTML = `  
+                    <p>Current Temperature: ${current.temperature_2m}°${data.data.current_units.temperature_2m}</p>
+                    <p>Wind Speed: ${current.wind_speed_10m} ${data.data.current_units.wind_speed_10m}</p>
+                `;
+
+                const chartData = data.data.hourly.time.map((time, index) => ({ // Prepare chart data
+                    time: new Date(time),
+                    temperature: data.data.hourly.temperature_2m[index],
+                    humidity: data.data.hourly.relative_humidity_2m[index],
+                    windSpeed: data.data.hourly.wind_speed_10m[index],
+                }));
+
+                // Initialize and update the temperature chart
+                const temperatureChart = new WeatherChart('temperatureChart', {
+                    color: '#ff7043',
+                    yLabel: `Temperature (${data.data.hourly_units.temperature_2m})`,
+                    units: `${data.data.hourly_units.temperature_2m}`,
+                });
+                temperatureChart.init().update(
+                    chartData,
+                    d => d.time,
+                    d => d.temperature
+                );
+
+                // Initialize and update the humidity chart
+                const humidityChart = new WeatherChart('humidityChart', {
+                    color: '#42a5f5',
+                    yLabel: `Humidity (${data.data.hourly_units.relative_humidity_2m})`,
+                    units: data.data.hourly_units.relative_humidity_2m,
+                });
+                humidityChart.init().update(
+                    chartData,
+                    d => d.time,
+                    d => d.humidity
+                );
+
+                // Initialize and update the wind speed chart
+                const windChart = new WeatherChart('windChart', {
+                    color: '#66bb6a',
+                    yLabel: `Wind Speed (${data.data.hourly_units.wind_speed_10m})`,
+                    units: `${data.data.hourly_units.wind_speed_10m}`,
+                });
+                windChart.init().update(
+                    chartData,
+                    d => d.time,
+                    d => d.windSpeed
+                );
+
+            } else { // If request failed
+                error.textContent = data.error; // Display error message
+                error.style.display = 'block';
+                weatherData.style.display = 'none'; // Hide weather data
+            }
+        } catch (err) { // Handle request errors
+            error.textContent = 'An error occurred. Please try again.';
+            error.style.display = 'block';
+            weatherData.style.display = 'none';
+        }
+    }
     </script>
 </body>
 </html>
