@@ -16,6 +16,13 @@ Setup:
    *  http://127.0.0.1:5000
 
 
+Group - 5
+
+- Minh  Do - 240422611
+- Sabbir - 230673537
+- Rohan Naveen - 240151478
+- Justin
+
 Overview:
 
 The Live Weather and Forecast Application is a Flask-based web application designed to support real-time weather information with built-in search analytics. The user can input a location to pull data on that area's current weather. It also monitors search trends and displays recent and popular searches.
