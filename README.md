@@ -16,11 +16,11 @@ Setup:
    *  http://127.0.0.1:5000
 
 
-Group - 5
+Group 5
 
-- Minh  Do - 240422611
-- Sabbir - 230673537
-- Rohan Naveen - 240151478
+- Minh Do
+- Sabbir
+- Rohan Naveen
 - Justin
 
 Overview:
